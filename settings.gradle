@@ -1,0 +1,3 @@
+rootProject.name='EasyAndroidFormTest'
+include ':app'
+include ':form-test'
