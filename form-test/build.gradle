@@ -32,7 +32,8 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    api 'com.github.saizad:Android-Easy-Form:1ad2a797ed2b14a815de379fe5dfa810e09f504c'
+    implementation 'com.github.saizad:Android-Easy-Form:1c92231a7137f088844ac3f2a0cb109cd40f5c90'
+//    api project(path: ':easyandroidform')
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.1.0'

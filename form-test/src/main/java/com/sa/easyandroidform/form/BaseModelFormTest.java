@@ -20,7 +20,13 @@ import java.util.List;
 import io.reactivex.observers.TestObserver;
 
 import static com.sa.easyandroidform.Utils.randomListItem;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 abstract public class BaseModelFormTest<F extends FormModel<?>> {
@@ -28,16 +34,17 @@ abstract public class BaseModelFormTest<F extends FormModel<?>> {
     private final static String MANDATORY_STRING_FIELD_NAME = "mandatory-base-form-test-string";
     private final static String STRING_FIELD_NAME = "base-form-test-string";
 
-    protected F form;
+    protected @NonNull F form;
 
     @BeforeEach
     void setUp() {
         form = initForm();
     }
 
-    abstract public F initForm();
+    abstract public @NonNull F initForm();
 
     public abstract BaseField<?> changeFormFieldToAnyValue();
+
     public abstract void setValidValue(BaseField<?> field);
 
     private StringField addField() {
@@ -56,26 +63,26 @@ abstract public class BaseModelFormTest<F extends FormModel<?>> {
         return new MandatoryStringField(fieldName, StringUtils.random(10));
     }
 
-    protected List<BaseField<?>> mandatoryFieldList(){
+    protected List<BaseField<?>> mandatoryFieldList() {
         return Utils.filter(form.fields, BaseField::isMandatory);
     }
 
-    protected List<BaseField<?>> nonMandatoryFieldList(){
+    protected List<BaseField<?>> nonMandatoryFieldList() {
         return Utils.filter(form.fields, type -> !type.isMandatory());
     }
 
-    protected List<BaseField<?>> setFieldList(){
+    protected List<BaseField<?>> setFieldList() {
         return Utils.filter(form.fields, BaseField::isSet);
     }
 
-    protected List<BaseField<?>> notSetFieldList(){
+    protected List<BaseField<?>> notSetFieldList() {
         return Utils.filter(form.fields, type -> !type.isSet());
     }
 
     @Test
     void buildForm__fail() {
         final List<BaseField<?>> mandatoryFields = mandatoryFieldList();
-        if(!mandatoryFields.isEmpty()) {
+        if (!mandatoryFields.isEmpty()) {
             final BaseField<?> baseField = randomListItem(mandatoryFields);
             baseField.setField(null);
             final Object build = form.build();
@@ -93,9 +100,9 @@ abstract public class BaseModelFormTest<F extends FormModel<?>> {
     }
 
     @Test
-    public void requiredBuild_Fail() {
+    public void requiredBuild__Fail() {
         final List<BaseField<?>> mandatoryList = mandatoryFieldList();
-        if(!mandatoryList.isEmpty()) {
+        if (!mandatoryList.isEmpty()) {
             final BaseField<?> baseField = randomListItem(mandatoryList);
             baseField.setField(null);
             assertThrows(IllegalStateException.class, () -> form.requiredBuild());
@@ -153,7 +160,7 @@ abstract public class BaseModelFormTest<F extends FormModel<?>> {
     @Test
     void isValid__false() {
         final List<BaseField<?>> mandatoryList = mandatoryFieldList();
-        if(!mandatoryList.isEmpty()){
+        if (!mandatoryList.isEmpty()) {
             final BaseField<?> baseField = randomListItem(mandatoryList);
             baseField.setField(null);
             assertFalse(form.isValid());
@@ -171,9 +178,10 @@ abstract public class BaseModelFormTest<F extends FormModel<?>> {
     @Test
     void isAllMandatoryFieldsProvided__false() {
         final List<BaseField<?>> mandatoryList = mandatoryFieldList();
-        if(!mandatoryList.isEmpty()) {
-            BaseField<?> formField = randomListItem(mandatoryList);
-            formField.setField(null);
+        for (BaseField<?> baseField : mandatoryList) {
+            baseField.setField(null);
+        }
+        if (!mandatoryList.isEmpty()) {
             assertFalse(form.isAllMandatoryFieldsProvided());
         }
     }
@@ -229,7 +237,7 @@ abstract public class BaseModelFormTest<F extends FormModel<?>> {
     }
 
     @Test
-    void form_emptyFields(){
+    void form_emptyFields() {
         assertFalse(form.fields.isEmpty());
     }
 
@@ -315,159 +323,62 @@ abstract public class BaseModelFormTest<F extends FormModel<?>> {
     }
 
     @Test
-    void formEdited__1_field(){
+    void formEdited__1_field() {
         final TestObserver<BaseField<?>> test = form.formEdited().skip(form.size()).test();
         changeFormFieldToAnyValue();
         test.assertValueCount(1);
     }
 
     @Test
-    void formEdited__1_same_field(){
+    void formEdited__1_same_field() {
         final TestObserver<BaseField<?>> test = form.formEdited().skip(form.size()).test();
         final BaseField<?> baseField = changeFormFieldToAnyValue();
         test.assertValue(baseField);
     }
 
     @Test
-    void observable__1_field(){
+    void observable__1_field() {
         final TestObserver<Object> test = form.observable().skip(form.size()).test();
         changeFormFieldToAnyValue();
         test.assertValueCount(1);
     }
 
     @Test
-    void modifiedObservable__no_value(){
+    void modifiedObservable__no_value() {
         final TestObserver<Boolean> test = form.modifiedObservable().skip(form.size()).test();
         test.assertNoValues();
     }
 
     @Test
-    void modifiedObservable__true(){
+    void modifiedObservable__true() {
         final TestObserver<Boolean> test = form.modifiedObservable().skip(form.size()).test();
         changeFormFieldToAnyValue();
         test.assertValue(true);
     }
 
     @Test
-    void modifiedObservable__false(){
-        final TestObserver<Boolean> test = form.modifiedObservable().skip(form.size()).test();
+    void modifiedObservable__false() {
         final List<BaseField<?>> notSetFieldList = notSetFieldList();
-        if(!notSetFieldList.isEmpty()) {
-            randomListItem(notSetFieldList).setField(null);
-            test.assertValue(false);
+        TestObserver<Boolean> test = form.modifiedObservable().skip(form.size()).test();
+        Boolean[] values = new Boolean[notSetFieldList.size()];
+        for (int i = 0; i < notSetFieldList.size(); i++) {
+            notSetFieldList.get(i).setField(null);
+            values[i] = false;
         }
+        test.assertValues(values);
     }
 
     @Test
     void setObservable_called() {
         final List<BaseField<?>> setFields = setFieldList();
-        if(!setFields.isEmpty()) {
-            final BaseField<?> field = randomListItem(setFields);
-            setValidValue(field);
-            ObservablesCall.setObservable(field, 1);
+        for (BaseField<?> setField : setFields) {
+            int countSize = 1;
+            if (setField instanceof FormModel) {
+                final FormModel<?> formModel = (FormModel<?>) setField;
+                countSize = formModel.size();
+            }
+            setValidValue(setField);
+            ObservablesCall.setObservable(setField, countSize);
         }
     }
-/*
-    @Test
-    void setObservable_not_called() {
-        ObservablesCall.setObservable(field, 0);
-    }
-
-    @Test
-    void validObservable_true() {
-        field.setField(getNewValidFieldValue());
-        ObservablesCall.validObservable(field, true);
-    }
-
-    @Test
-    void validObservable_false() {
-        field.setIsMandatory(true);
-        ObservablesCall.validObservable(field, false);
-    }
-
-    @Test
-    void invalidObservable_called() {
-        field.setIsMandatory(true);
-        ObservablesCall.invalidObservable(field, 1);
-    }
-
-    @Test
-    void invalidObservable_not_called() {
-        ObservablesCall.invalidObservable(field, 0);
-    }
-
-    @Test
-    void nonEmptyInvalidObservable_not_called() {
-        field.setIsMandatory(true);
-        ObservablesCall.nonEmptyInvalidObservable(field, 0);
-    }
-
-    @Test
-    void notEmptyValidObservable_called() {
-        field.setField(getNewValidFieldValue());
-        ObservablesCall.notEmptyValidObservable(field, 1);
-    }
-
-    @Test
-    void notEmptyValidObservable_not_called() {
-        field.setIsMandatory(true);
-        ObservablesCall.notEmptyValidObservable(field, 0);
-    }
-
-    @Test
-    void fieldUnsetObservable_called() {
-        ObservablesCall.fieldUnsetObservable(field, 1);
-    }
-
-    @Test
-    void fieldUnsetObservable_not_called() {
-        field.setField(getNewValidFieldValue());
-        ObservablesCall.fieldUnsetObservable(field, 0);
-    }
-
-    @Test
-    void networkError_called() {
-        field.networkErrorPublish(NETWORK_ERROR);
-        ObservablesCall.networkError(field, 1);
-    }
-
-    @Test
-    void networkError_not_called() {
-        field.networkErrorPublish(NETWORK_ERROR);
-        field.setField(getNewValidFieldValue());
-        ObservablesCall.networkError(field, 0);
-    }
-
-    @Test
-    void isValueModifiedObservable_true() {
-        field.setField(getNewValidFieldValue());
-        ObservablesCall.isValueModifiedObservable(field, true);
-    }
-
-    @Test
-    void isValueModifiedObservable_false() {
-        ObservablesCall.isValueModifiedObservable(field, false);
-    }
-
-    @Test
-    void isModifiedObservable_true() {
-        nonMandatoryOgField.setField(getNewValidFieldValue());
-        ObservablesCall.isModifiedObservable(nonMandatoryOgField, true);
-    }
-
-    @Test
-    void isModifiedObservable_false() {
-        ObservablesCall.isModifiedObservable(nonMandatoryOgField, false);
-    }
-
-    @Test
-    void errorState_true() {
-        ObservablesCall.errorState(field, true);
-    }
-
-    @Test
-    void errorState_false() {
-        field.setIsMandatory(true);
-        ObservablesCall.errorState(field, false);
-    }*/
 }

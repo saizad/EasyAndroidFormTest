@@ -45,6 +45,7 @@ public class ObservablesCall {
         final TestObserver<?> testObserver = field.errorStateObservable()
                 .map(__ -> __.first)
                 .test()
+                .withTag(field.getFieldId())
                 .assertValue(state);
         testObserver.dispose();
     }
@@ -52,6 +53,7 @@ public class ObservablesCall {
     public static void isModifiedObservable(BaseField<?> field, boolean state) {
         final TestObserver<?> testObserver = field.modifiedObservable()
                 .test()
+                .withTag(field.getFieldId())
                 .assertValue(state);
         testObserver.dispose();
     }
@@ -59,6 +61,7 @@ public class ObservablesCall {
     public static void isValueModifiedObservable(BaseField<?> field, boolean state) {
         final TestObserver<?> testObserver = field.isValueModifiedObservable()
                 .test()
+                .withTag(field.getFieldId())
                 .assertValue(state);
         testObserver.dispose();
     }
@@ -66,6 +69,7 @@ public class ObservablesCall {
     public static void validObservable(BaseField<?> field, boolean state) {
         final TestObserver<?> testObserver = field.validObservable()
                 .test()
+                .withTag(field.getFieldId())
                 .assertValue(state);
         testObserver.dispose();
     }
@@ -73,6 +77,7 @@ public class ObservablesCall {
     public static void networkError(BaseField<?> field, int callCount) {
         final TestObserver<?> testObserver = field.networkError()
                 .test()
+                .withTag(field.getFieldId())
                 .assertValueCount(callCount);
         testObserver.dispose();
     }
@@ -80,6 +85,7 @@ public class ObservablesCall {
     public static void fieldUnsetObservable(BaseField<?> field, int callCount) {
         final TestObserver<?> testObserver = field.fieldUnsetObservable()
                 .test()
+                .withTag(field.getFieldId())
                 .assertValueCount(callCount);
         testObserver.dispose();
     }
@@ -89,6 +95,7 @@ public class ObservablesCall {
                 field
                         .notEmptyValidObservable()
                         .test()
+                        .withTag(field.getFieldId())
                         .assertValueCount(callCount);
         testObserver.dispose();
     }
@@ -98,6 +105,7 @@ public class ObservablesCall {
                 field
                         .nonEmptyInvalidObservable()
                         .test()
+                        .withTag(field.getFieldId())
                         .assertValueCount(callCount);
         testObserver.dispose();
     }
@@ -107,6 +115,7 @@ public class ObservablesCall {
                 field
                         .invalidObservable()
                         .test()
+                        .withTag(field.getFieldId())
                         .assertValueCount(callCount);
         testObserver.dispose();
     }
@@ -115,6 +124,7 @@ public class ObservablesCall {
         final TestObserver<?> testObserver =
                 field.setObservable()
                         .test()
+                        .withTag(field.getFieldId())
                         .assertValueCount(callCount);
         testObserver.dispose();
     }
@@ -123,6 +133,7 @@ public class ObservablesCall {
         final TestObserver<Object> objectTestObserver =
                 field.observable()
                         .test()
+                        .withTag(field.getFieldId())
                         .assertValueCount(callCount);
         objectTestObserver.dispose();
     }
