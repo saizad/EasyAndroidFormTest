@@ -1,6 +1,3 @@
 rootProject.name='EasyAndroidFormTest'
 include ':app'
 include ':form-test'
-
-//include ':easyandroidform'
-//project(':easyandroidform').projectDir = new File('../EasyAndroidForm/easyandroidform')
